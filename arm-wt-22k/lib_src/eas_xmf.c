@@ -43,6 +43,7 @@
 
 /* XMF header file type */
 #define XMF_IDENTIFIER		 	0x584d465f
+#define XMF_VERSION_1_00		0x312e3030
 #define XMF_VERSION_2_00		0x322e3030
 #define XMF_FILE_TYPE			0x00000002
 #define XMF_SPEC_LEVEL			0x00000001
@@ -126,28 +127,30 @@ static EAS_RESULT XMF_CheckFileType (S_EAS_DATA *pEASData, EAS_FILE_HANDLE fileH
 	/* read the version */
 	if ((result = EAS_HWGetDWord(pEASData->hwInstData, fileHandle, &temp, EAS_TRUE))  != EAS_SUCCESS)
 		return result;
-	if (temp != XMF_VERSION_2_00)
+	if (temp != XMF_VERSION_1_00 && temp != XMF_VERSION_2_00)
 	{
-		{ /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "XMF file version was 0x%08x, expected 0x%08x\n", temp, XMF_VERSION_2_00); */ }
+		{ /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "XMF file version was 0x%08x, expected 0x%08x or 0x%08x\n", temp, XMF_VERSION_1_00, XMF_VERSION_2_00); */ }
 		return EAS_SUCCESS;
 	}
-
-	/* read the file type */
-	if ((result = EAS_HWGetDWord(pEASData->hwInstData, fileHandle, &temp, EAS_TRUE))  != EAS_SUCCESS)
-		return result;
-	if (temp != XMF_FILE_TYPE)
+	else if (temp == XMF_VERSION_2_00)
 	{
-		{ /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "XMF file type was 0x%08x, expected 0x%08x\n", temp, XMF_FILE_TYPE); */ }
-		return EAS_SUCCESS;
-	}
+		/* read the file type */
+		if ((result = EAS_HWGetDWord(pEASData->hwInstData, fileHandle, &temp, EAS_TRUE))  != EAS_SUCCESS)
+			return result;
+		if (temp != XMF_FILE_TYPE)
+		{
+			{ /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "XMF file type was 0x%08x, expected 0x%08x\n", temp, XMF_FILE_TYPE); */ }
+			return EAS_SUCCESS;
+		}
 
-	/* read the spec level */
-	if ((result = EAS_HWGetDWord(pEASData->hwInstData, fileHandle, &temp, EAS_TRUE))  != EAS_SUCCESS)
-		return result;
-	if (temp != XMF_SPEC_LEVEL)
-	{
-		{ /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "XMF file spec was 0x%08x, expected 0x%08x\n", temp, XMF_SPEC_LEVEL); */ }
-		return EAS_SUCCESS;
+		/* read the spec level */
+		if ((result = EAS_HWGetDWord(pEASData->hwInstData, fileHandle, &temp, EAS_TRUE))  != EAS_SUCCESS)
+			return result;
+		if (temp != XMF_SPEC_LEVEL)
+		{
+			{ /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "XMF file spec was 0x%08x, expected 0x%08x\n", temp, XMF_SPEC_LEVEL); */ }
+			return EAS_SUCCESS;
+		}
 	}
 
 	/* check for static memory allocation */
