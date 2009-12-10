@@ -793,8 +793,9 @@ static EAS_RESULT NextChunk (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 *pPos, EAS
 	*pPos += *pSize + 8;
 
 	/* adjust to word boundary */
-	if (*pPos & 1)
-		(*pPos)++;
+        /* TBD: Search the need to adjust to byte boundary*/
+        //if (*pPos & 1)
+          //(*pPos)++;
 
 	return EAS_SUCCESS;
 }
