@@ -1204,7 +1204,7 @@ static void SMF_UpdateTime (S_SMF_DATA *pSMFData, EAS_U32 ticks)
     temp2 = (ticks & 0x3ff) * pSMFData->tickConv;
     if (temp2 > 0)
             pSMFData->time += (EAS_I32)(temp2 >> 2);
-    if ((temp1 > 0) && (temp2 == 0))
+    if (temp1 < 100000)
              pSMFData->time += (EAS_I32)(temp1 << 8);
 }
 
