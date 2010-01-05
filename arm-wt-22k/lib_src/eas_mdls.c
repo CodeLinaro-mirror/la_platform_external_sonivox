@@ -765,38 +765,39 @@ void DLSAddRef (S_DLS *pDLS)
 */
 static EAS_RESULT NextChunk (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 *pPos, EAS_U32 *pChunkType, EAS_I32 *pSize)
 {
-	EAS_RESULT result;
+    EAS_RESULT result;
 
-	/* seek to start of chunk */
-	if ((result = EAS_HWFileSeek(pDLSData->hwInstData, pDLSData->fileHandle, *pPos)) != EAS_SUCCESS)
-		return result;
-	
-	/* read the chunk type */
-	if ((result = EAS_HWGetDWord(pDLSData->hwInstData, pDLSData->fileHandle, pChunkType, EAS_TRUE)) != EAS_SUCCESS)
-		return result;
+    /* seek to start of chunk */
+    if ((result = EAS_HWFileSeek(pDLSData->hwInstData, pDLSData->fileHandle, *pPos)) != EAS_SUCCESS)
+        return result;
 
-	/* read the chunk size */
-	if ((result = EAS_HWGetDWord(pDLSData->hwInstData, pDLSData->fileHandle, pSize, EAS_FALSE)) != EAS_SUCCESS)
-		return result;
+    /* read the chunk type */
+    if ((result = EAS_HWGetDWord(pDLSData->hwInstData, pDLSData->fileHandle, pChunkType, EAS_TRUE)) != EAS_SUCCESS)
+        return result;
 
-	/* get form type for RIFF and LIST types */
-	if ((*pChunkType == CHUNK_RIFF) || (*pChunkType == CHUNK_LIST))
-	{
-		
-		/* read the form type */
-		if ((result = EAS_HWGetDWord(pDLSData->hwInstData, pDLSData->fileHandle, pChunkType, EAS_TRUE)) != EAS_SUCCESS)
-			return result;
+    /* read the chunk size */
+    if ((result = EAS_HWGetDWord(pDLSData->hwInstData, pDLSData->fileHandle, pSize, EAS_FALSE)) != EAS_SUCCESS)
+        return result;
 
-	}
+    /* get form type for RIFF and LIST types */
+    if ((*pChunkType == CHUNK_RIFF) || (*pChunkType == CHUNK_LIST))
+    {
 
-	/* calculate start of next chunk */
-	*pPos += *pSize + 8;
+        /* read the form type */
+        if ((result = EAS_HWGetDWord(pDLSData->hwInstData, pDLSData->fileHandle, pChunkType, EAS_TRUE)) != EAS_SUCCESS)
+            return result;
 
-	/* adjust to word boundary */
-	if (*pPos & 1)
-		(*pPos)++;
+    }
 
-	return EAS_SUCCESS;
+    /* calculate start of next chunk */
+    *pPos += *pSize + 8;
+
+    /* adjust to word boundary */
+    /*TBD: Search the need to adjust to byte boundary*/
+    //if (*pPos & 1)
+       // (*pPos)++;
+
+    return EAS_SUCCESS;
 }
 
 /*----------------------------------------------------------------------------
