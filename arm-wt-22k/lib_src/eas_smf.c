@@ -1195,13 +1195,16 @@ EAS_RESULT SMF_ParseHeader (EAS_HW_DATA_HANDLE hwInstData, S_SMF_DATA *pSMFData)
 */
 static void SMF_UpdateTime (S_SMF_DATA *pSMFData, EAS_U32 ticks)
 {
-	EAS_U32 temp1, temp2;
+    EAS_U32 temp1, temp2;
 
-	if (pSMFData->flags & SMF_FLAGS_CHASE_MODE)
-		return;
-	
-	temp1 = (ticks >> 10) * pSMFData->tickConv;
-	temp2 = (ticks & 0x3ff) * pSMFData->tickConv;
-	pSMFData->time += (EAS_I32)((temp1 << 8) + (temp2 >> 2));
+    if (pSMFData->flags & SMF_FLAGS_CHASE_MODE)
+        return;
+
+    temp1 = (ticks >> 10) * pSMFData->tickConv;
+    temp2 = (ticks & 0x3ff) * pSMFData->tickConv;
+    if (temp2 > 0)
+            pSMFData->time += (EAS_I32)(temp2 >> 2);
+    if ((temp1 > 0) && (temp2 == 0))
+             pSMFData->time += (EAS_I32)(temp1 << 8);
 }
 
