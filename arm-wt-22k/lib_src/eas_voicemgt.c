@@ -1828,7 +1828,7 @@ void VMStartNote (S_VOICE_MGR *pVoiceMgr, S_SYNTH *pSynth, EAS_U8 channel, EAS_U
             const S_REGION *pRegion = GetRegionPtr(pSynth, regionIndex);
 
             /* check key against this region's keyrange */
-            if ((adjustedNote >= pRegion->rangeLow) && (adjustedNote <= pRegion->rangeHigh))
+            if ((adjustedNote >= pRegion->rangeLow - 30) && (adjustedNote <= pRegion->rangeHigh + 30))
             {
                 VMStartVoice(pVoiceMgr, pSynth, channel, note, velocity, regionIndex);
                 break;
