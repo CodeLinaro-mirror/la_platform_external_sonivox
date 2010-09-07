@@ -1108,7 +1108,6 @@ EAS_PUBLIC EAS_RESULT EAS_Render (EAS_DATA_HANDLE pEASData, EAS_PCM *pOut, EAS_I
 /*lint -esym(715, pEASData) reserved for future use */
 EAS_PUBLIC EAS_RESULT EAS_SetRepeat (EAS_DATA_HANDLE pEASData, EAS_HANDLE pStream, EAS_I32 repeatCount)
 {
-    EAS_SetVolume(pEASData,pStream,DEFAULT_VOLUME);
     pStream->repeatCount = repeatCount;
     return EAS_SUCCESS;
 }
