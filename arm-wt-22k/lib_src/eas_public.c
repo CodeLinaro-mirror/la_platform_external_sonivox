@@ -646,6 +646,8 @@ EAS_PUBLIC EAS_RESULT EAS_OpenFile (EAS_DATA_HANDLE pEASData, EAS_FILE_LOCATOR l
         if ((result = (*pParserModule->pfCheckFileType)(pEASData, fileHandle, &streamHandle, 0L)) != EAS_SUCCESS)
         {
             { /* dpp: EAS_ReportEx(_EAS_SEVERITY_ERROR, "CheckFileType returned error %ld\n", result); */ }
+            /* no parser was able to recognize the file, close it and return an error */
+            EAS_HWCloseFile(pEASData->hwInstData, fileHandle);
             return result;
         }
 
@@ -661,7 +663,11 @@ EAS_PUBLIC EAS_RESULT EAS_OpenFile (EAS_DATA_HANDLE pEASData, EAS_FILE_LOCATOR l
 
         /* rewind the file for the next parser */
         if ((result = EAS_HWFileSeek(pEASData->hwInstData, fileHandle, 0L)) != EAS_SUCCESS)
+        {
+            /* no parser was able to recognize the file, close it and return an error */
+            EAS_HWCloseFile(pEASData->hwInstData, fileHandle);
             return result;
+        }
     }
 
     /* no parser was able to recognize the file, close it and return an error */
