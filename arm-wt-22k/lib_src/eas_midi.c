@@ -248,7 +248,6 @@ static EAS_RESULT ProcessMIDIMessage (S_EAS_DATA *pEASData, S_SYNTH *pSynth, S_M
         {
             { /* dpp: EAS_ReportEx(_EAS_SEVERITY_DETAIL,"NoteOn: %02x %02x %02x\n",
                 pMIDIStream->status, pMIDIStream->d1, pMIDIStream->d2); */ }
-            VMSetVolume(pSynth, DEFAULT_SYNTH_MASTER_VOLUME);
             pMIDIStream->flags |= MIDI_FLAG_FIRST_NOTE;
             if (parserMode == eParserModePlay)
                 VMStartNote(pEASData->pVoiceMgr, pSynth, channel, pMIDIStream->d1, pMIDIStream->d2);
