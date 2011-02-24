@@ -9,6 +9,7 @@
  * For SMF timebase analysis, see "MIDI Sequencer Analysis.xls".
  *
  * Copyright Sonic Network Inc. 2005
+ * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -276,10 +277,16 @@ EAS_RESULT SMF_Event (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS_INT pars
     EAS_U32 ticks;
     EAS_U32 temp;
 
+    if(pInstData == NULL)
+        return EAS_FAILURE;
+
     /* establish pointer to instance data */
     pSMFData = (S_SMF_DATA*) pInstData;
     if (pSMFData->state >= EAS_STATE_OPEN)
         return EAS_SUCCESS;
+
+    if(pSMFData->nextStream == NULL)
+        return EAS_FAILURE;
 
     /* get current ticks */
     ticks = pSMFData->nextStream->ticks;
