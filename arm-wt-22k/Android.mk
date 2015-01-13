@@ -37,7 +37,7 @@ LOCAL_SRC_FILES = \
 	lib_src/wt_22khz.c \
 	lib_src/jet.c \
 	host_src/eas_config.c \
-	host_src/eas_hostmm.c \
+	host_src/eas_hostmm.cpp \
 	host_src/eas_main.c \
 	host_src/eas_report.c \
 	host_src/eas_wave.c
@@ -100,6 +100,6 @@ LOCAL_COPY_HEADERS += lib_src/ARM_synth_constants_gnu.inc
 endif
 
 LOCAL_SHARED_LIBRARIES := \
-	libutils libcutils
+	libutils libcutils libdrmframework
 
 include $(BUILD_SHARED_LIBRARY)
