@@ -77,11 +77,10 @@ extern EAS_RESULT EAS_HWVibrate(EAS_HW_DATA_HANDLE hwInstData, EAS_BOOL state);
 extern EAS_RESULT EAS_HWLED(EAS_HW_DATA_HANDLE hwInstData, EAS_BOOL state);
 extern EAS_RESULT EAS_HWBackLight(EAS_HW_DATA_HANDLE hwInstData, EAS_BOOL state);
 
+/* host yield function */
+extern EAS_BOOL EAS_HWYield(EAS_HW_DATA_HANDLE hwInstData);
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
 
-
-/* host yield function */
-extern EAS_BOOL EAS_HWYield(EAS_HW_DATA_HANDLE hwInstData);
 #endif /* end _EAS_HOST_H */
