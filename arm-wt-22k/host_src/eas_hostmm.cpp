@@ -56,6 +56,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <media/MediaPlayerInterface.h>
+#include <drm/DrmManagerClient.h>
 #endif
 
 #include "eas_host.h"
@@ -83,6 +84,9 @@
  * to malloc and free, the dup flag, and simply track
  * the file size and read position.
  */
+
+using namespace android;
+
 typedef struct eas_hw_file_tag
 {
     EAS_I32 fileSize;
@@ -112,7 +116,7 @@ EAS_RESULT EAS_HWInit (EAS_HW_DATA_HANDLE *pHWInstData)
     int i;
 
     /* need to track file opens for duplicate handles */
-    *pHWInstData = malloc(sizeof(EAS_HW_INST_DATA));
+    *pHWInstData = (EAS_HW_DATA_HANDLE ) malloc(sizeof(EAS_HW_INST_DATA));
     if (!(*pHWInstData))
         return EAS_ERROR_MALLOC_FAILED;
 
@@ -262,6 +266,41 @@ EAS_RESULT EAS_HWOpenFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_LOCATOR locat
             } else {
                 /* else file is already open */
                 fd = dup(locator->fd);
+            }
+
+            DrmManagerClient* drmManagerClient = new DrmManagerClient();
+            sp<DecryptHandle> decryptHandle = NULL;
+
+            if(drmManagerClient != NULL) {
+                decryptHandle = drmManagerClient->openDecryptSession(fd,0,1, NULL);
+                if (decryptHandle != NULL) {
+                    char* data = new char[4096];
+                    const char* tmpFile = "/data/local/.Drm/svtemp";
+                    int decodedFD = -1;
+                    remove(tmpFile); //remove file.
+                    decodedFD = open (tmpFile, O_WRONLY | O_CREAT, 0777);
+                    int offset = 0;
+                    int len = 0;
+
+                    while((len = drmManagerClient->pread(decryptHandle, data, 4096, offset))  > 0 ) {
+                        write(decodedFD, data, len);
+                        offset += len;
+                    }
+                    close(decodedFD);
+                    if (data != NULL) {
+                        delete [] data;
+                    }
+
+                    if(decryptHandle != NULL) {
+                        drmManagerClient->closeDecryptSession(decryptHandle);
+                        decryptHandle = NULL;
+                    }
+                    close(fd);
+                    fd = open (tmpFile, O_RDONLY);
+                }
+
+                delete drmManagerClient;
+                drmManagerClient = NULL;
             }
 
             /* determine the file size */
