@@ -57,6 +57,7 @@
 #include <pthread.h>
 #include <media/MediaPlayerInterface.h>
 #include <drm/DrmManagerClient.h>
+#include <utils/String8.h>
 #endif
 
 #include "eas_host.h"
@@ -75,6 +76,24 @@
 //                              + 1(after end of playing segment, before files closed)
 #define EAS_MAX_FILE_HANDLES    100
 #endif
+
+/*
+ * DRM supported audio Mimetypes for sonivox.
+ */
+static const char* const DRM_FILE_MIME_TYPES[] = { "audio/mid",
+                                                "audio/midi",
+                                                "audio/x-mid",
+                                                "audio/x-midi",
+                                                "audio/sp-mid",
+                                                "audio/sp-midi",
+                                                "audio/smf",
+                                                "audio/xmf",
+                                                "audio/mxmf",
+                                                "audio/imy",
+                                                "audio/imelody"
+                                                "audio/rtttl",
+                                                "audio/rtx",
+                                                "audio/ota" };
 
 /*
  * this structure and the related function are here
@@ -243,6 +262,10 @@ EAS_RESULT EAS_HWOpenFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_LOCATOR locat
     EAS_HW_FILE *file;
     int fd;
     int i, temp;
+    bool isSupportedMimeType = false;
+    String8 path;
+    String8 mimeType;
+    int mimeSize = 0;
 
     /* set return value to NULL */
     *pFile = NULL;
@@ -272,7 +295,26 @@ EAS_RESULT EAS_HWOpenFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_LOCATOR locat
             sp<DecryptHandle> decryptHandle = NULL;
 
             if(drmManagerClient != NULL) {
-                decryptHandle = drmManagerClient->openDecryptSession(fd,0,1, NULL);
+                if(locator->path) {
+                    path = String8(locator->path);
+                } else {
+                    path = String8("fake_file_name.dm");
+                }
+                mimeType = drmManagerClient->getOriginalMimeType(path, fd);
+                mimeSize = sizeof(DRM_FILE_MIME_TYPES) / sizeof(DRM_FILE_MIME_TYPES[0]);
+                if(mimeType){
+                    for (int i = 0; i < mimeSize; i++) {
+                        if (mimeType == String8(DRM_FILE_MIME_TYPES[i])) {
+                            isSupportedMimeType = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(isSupportedMimeType){
+                    decryptHandle = drmManagerClient->openDecryptSession(fd,0,1, NULL);
+                }
+
                 if (decryptHandle != NULL) {
                     char* data = new char[4096];
                     const char* tmpFile = "/data/local/.Drm/svtemp";
