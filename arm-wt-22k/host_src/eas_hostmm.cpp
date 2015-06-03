@@ -56,6 +56,8 @@
 #include <signal.h>
 #include <pthread.h>
 #include <media/MediaPlayerInterface.h>
+#include <drm/DrmManagerClient.h>
+#include <utils/String8.h>
 #endif
 
 #include "eas_host.h"
@@ -76,6 +78,24 @@
 #endif
 
 /*
+ * DRM supported audio Mimetypes for sonivox.
+ */
+static const char* const DRM_FILE_MIME_TYPES[] = { "audio/mid",
+                                                "audio/midi",
+                                                "audio/x-mid",
+                                                "audio/x-midi",
+                                                "audio/sp-mid",
+                                                "audio/sp-midi",
+                                                "audio/smf",
+                                                "audio/xmf",
+                                                "audio/mxmf",
+                                                "audio/imy",
+                                                "audio/imelody",
+                                                "audio/rtttl",
+                                                "audio/rtx",
+                                                "audio/ota" };
+
+/*
  * this structure and the related function are here
  * to support the ability to create duplicate handles
  * and buffering it in memory. If your system uses
@@ -83,6 +103,9 @@
  * to malloc and free, the dup flag, and simply track
  * the file size and read position.
  */
+
+using namespace android;
+
 typedef struct eas_hw_file_tag
 {
     EAS_I32 fileSize;
@@ -112,7 +135,7 @@ EAS_RESULT EAS_HWInit (EAS_HW_DATA_HANDLE *pHWInstData)
     int i;
 
     /* need to track file opens for duplicate handles */
-    *pHWInstData = malloc(sizeof(EAS_HW_INST_DATA));
+    *pHWInstData = (EAS_HW_DATA_HANDLE ) malloc(sizeof(EAS_HW_INST_DATA));
     if (!(*pHWInstData))
         return EAS_ERROR_MALLOC_FAILED;
 
@@ -239,6 +262,10 @@ EAS_RESULT EAS_HWOpenFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_LOCATOR locat
     EAS_HW_FILE *file;
     int fd;
     int i, temp;
+    bool isSupportedMimeType = false;
+    String8 path;
+    String8 mimeType;
+    int mimeSize = 0;
 
     /* set return value to NULL */
     *pFile = NULL;
@@ -262,6 +289,60 @@ EAS_RESULT EAS_HWOpenFile (EAS_HW_DATA_HANDLE hwInstData, EAS_FILE_LOCATOR locat
             } else {
                 /* else file is already open */
                 fd = dup(locator->fd);
+            }
+
+            DrmManagerClient* drmManagerClient = new DrmManagerClient();
+            sp<DecryptHandle> decryptHandle = NULL;
+
+            if(drmManagerClient != NULL) {
+                if(locator->path) {
+                    path = String8(locator->path);
+                } else {
+                    path = String8("fake_file_name.dm");
+                }
+                mimeType = drmManagerClient->getOriginalMimeType(path, fd);
+                mimeSize = sizeof(DRM_FILE_MIME_TYPES) / sizeof(DRM_FILE_MIME_TYPES[0]);
+                if(mimeType){
+                    for (int i = 0; i < mimeSize; i++) {
+                        if (mimeType == String8(DRM_FILE_MIME_TYPES[i])) {
+                            isSupportedMimeType = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(isSupportedMimeType){
+                    decryptHandle = drmManagerClient->openDecryptSession(fd,0,1, NULL);
+                }
+
+                if (decryptHandle != NULL) {
+                    char* data = new char[4096];
+                    const char* tmpFile = "/data/local/.Drm/svtemp";
+                    int decodedFD = -1;
+                    remove(tmpFile); //remove file.
+                    decodedFD = open (tmpFile, O_WRONLY | O_CREAT, 0777);
+                    int offset = 0;
+                    int len = 0;
+
+                    while((len = drmManagerClient->pread(decryptHandle, data, 4096, offset))  > 0 ) {
+                        write(decodedFD, data, len);
+                        offset += len;
+                    }
+                    close(decodedFD);
+                    if (data != NULL) {
+                        delete [] data;
+                    }
+
+                    if(decryptHandle != NULL) {
+                        drmManagerClient->closeDecryptSession(decryptHandle);
+                        decryptHandle = NULL;
+                    }
+                    close(fd);
+                    fd = open (tmpFile, O_RDONLY);
+                }
+
+                delete drmManagerClient;
+                drmManagerClient = NULL;
             }
 
             /* determine the file size */
