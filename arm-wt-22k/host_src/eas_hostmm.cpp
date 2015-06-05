@@ -90,7 +90,7 @@ static const char* const DRM_FILE_MIME_TYPES[] = { "audio/mid",
                                                 "audio/xmf",
                                                 "audio/mxmf",
                                                 "audio/imy",
-                                                "audio/imelody"
+                                                "audio/imelody",
                                                 "audio/rtttl",
                                                 "audio/rtx",
                                                 "audio/ota" };
