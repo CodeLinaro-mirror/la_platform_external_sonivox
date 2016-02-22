@@ -952,7 +952,7 @@ static EAS_RESULT Parse_wave (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_
     }
 
     // limit to reasonable size
-    if (dataSize > MAX_DLS_WAVE_SIZE)
+    if (dataSize < 0 || dataSize > MAX_DLS_WAVE_SIZE)
     {
         return EAS_ERROR_SOUND_LIBRARY;
     }
@@ -1295,8 +1295,8 @@ static EAS_RESULT Parse_data (SDLS_SYNTHESIZER_DATA *pDLSData, EAS_I32 pos, EAS_
     /* for looped samples, copy the last sample to the end */
     if (pWsmp->loopLength)
     {
-        if (pDLSData->wavePoolSize < sizeof(EAS_SAMPLE)
-            || (pWsmp->loopStart + pWsmp->loopLength) * sizeof(EAS_SAMPLE) > pDLSData->wavePoolSize - sizeof(EAS_SAMPLE))
+        if (sampleLen < sizeof(EAS_SAMPLE)
+            || (pWsmp->loopStart + pWsmp->loopLength) * sizeof(EAS_SAMPLE) > sampleLen - sizeof(EAS_SAMPLE))
         {
             return EAS_FAILURE;
         }
