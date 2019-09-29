@@ -334,8 +334,12 @@ static EAS_RESULT RTTTL_Event (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS
                 }
 
                 /* loop back to start of notes */
+                if (pData->notePlayedSinceRepeat == 0) {
+                    return EAS_ERROR_FILE_FORMAT;
+                }
                 if ((result = EAS_HWFileSeek(pEASData->hwInstData, pData->fileHandle, pData->repeatOffset)) != EAS_SUCCESS)
                     return result;
+                pData->notePlayedSinceRepeat = 0;
                 continue;
             }
 
@@ -444,6 +448,7 @@ static EAS_RESULT RTTTL_Event (S_EAS_DATA *pEASData, EAS_VOID_PTR pInstData, EAS
         /* end of event */
         else if ((c == ',') && note)
         {
+            pData->notePlayedSinceRepeat = 1;
 
             /* handle note events */
             if (note != RTTTL_REST)
@@ -948,6 +953,15 @@ static EAS_RESULT RTTTL_GetNumber (EAS_HW_DATA_HANDLE hwInstData, S_RTTTL_DATA *
         if (IsDigit(c))
         {
             pData->dataByte = 0;
+            if (temp > 100) {
+                // This is just to prevent overflows in case of a really large number
+                // in the file, but rather than allowing the number to grow up to INT_MAX,
+                // we limit it to a much smaller number since the numbers in an RTTTL file
+                // are supposed to be at most in the hundreds, not millions or billions.
+                // There are more specific checks in the callers of this function to enforce
+                // the various limits for notes, octaves, tempo, etc.
+                return EAS_FAILURE;
+            }
             temp = temp * 10 + c - '0';
             *pValue = temp;
         }
@@ -1102,6 +1116,7 @@ static EAS_RESULT RTTTL_ParseHeader (S_EAS_DATA *pEASData, S_RTTTL_DATA* pData, 
     if ((result = EAS_HWFilePos(pEASData->hwInstData, pData->fileHandle, &pData->repeatOffset)) != EAS_SUCCESS)
         return result;
 
+    pData->notePlayedSinceRepeat = 0;
     return EAS_SUCCESS;
 }
 
